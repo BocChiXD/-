@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>农家乐智能点菜推荐系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(45deg, #ff6b6b, #feca57);
+            padding: 30px;
+            text-align: center;
+            color: white;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+        
+        .content {
+            padding: 40px;
+        }
+        
+        .question-section {
+            margin-bottom: 30px;
+        }
+        
+        .question {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border-left: 4px solid #667eea;
+        }
+        
+        .question h3 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+        
+        .options {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        .option {
+            background: white;
+            border: 2px solid #e9ecef;
+            padding: 12px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.95em;
+        }
+        
+        .option:hover {
+            border-color: #667eea;
+            background: #f0f4ff;
+        }
+        
+        .option.selected {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+        
+        .text-input {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 16px;
+            margin-top: 10px;
+        }
+        
+        .text-input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .range-input {
+            width: 100%;
+            margin: 15px 0;
+        }
+        
+        .range-display {
+            text-align: center;
+            font-size: 1.1em;
+            color: #667eea;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+        
+        .recommend-btn {
+            width: 100%;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 18px 30px;
+            font-size: 1.2em;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 30px;
+        }
+        
+        .recommend-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+        }
+        
+        .results {
+            display: none;
+            margin-top: 40px;
+            padding: 30px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+        
+        .results h2 {
+            color: #2c3e50;
+            margin-bottom: 25px;
+            text-align: center;
+            font-size: 1.8em;
+        }
+        
+        .menu-category {
+            margin-bottom: 25px;
+        }
+        
+        .category-title {
+            background: #667eea;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-size: 1.2em;
+            margin-bottom: 15px;
+        }
+        
+        .dish-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: white;
+            padding: 15px;
+            margin-bottom: 8px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        .dish-name {
+            font-size: 1.1em;
+            color: #2c3e50;
+        }
+        
+        .dish-price {
+            font-size: 1.1em;
+            color: #e74c3c;
+            font-weight: bold;
+        }
+        
+        .total-section {
+            background: #2c3e50;
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+            text-align: center;
+        }
+        
+        .total-section h3 {
+            margin-bottom: 10px;
+            font-size: 1.3em;
+        }
+        
+        .total-price {
+            font-size: 2em;
+            color: #feca57;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏡 农家乐智能点菜</h1>
+            <p>根据您的需求，为您推荐最合适的菜品组合</p>
+        </div>
+        
+        <div class="content">
+            <div class="question-section">
+                <div class="question">
+                    <h3>1. 您有什么忌口吗？（多选）</h3>
+                    <div class="options">
+                        <div class="option" data-question="allergies" data-value="无忌口">无忌口</div>
+                        <div class="option" data-question="allergies" data-value="不吃猪肉">不吃猪肉</div>
+                        <div class="option" data-question="allergies" data-value="不吃牛肉">不吃牛肉</div>
+                        <div class="option" data-question="allergies" data-value="不吃鸡肉">不吃鸡肉</div>
+                        <div class="option" data-question="allergies" data-value="不吃鱼">不吃鱼</div>
+                        <div class="option" data-question="allergies" data-value="素食">素食主义</div>
+                        <div class="option" data-question="allergies" data-value="海鲜过敏">海鲜过敏</div>
+                    </div>
+                </div>
+                
+                <div class="question">
+                    <h3>2. 您偏好什么口味？（单选）</h3>
+                    <div class="options">
+                        <div class="option" data-question="taste" data-value="清淡">清淡口味</div>
+                        <div class="option" data-question="taste" data-value="麻辣">麻辣口味</div>
+                        <div class="option" data-question="taste" data-value="香甜">香甜口味</div>
+                        <div class="option" data-question="taste" data-value="酸辣">酸辣口味</div>
+                        <div class="option" data-question="taste" data-value="咸鲜">咸鲜口味</div>
+                    </div>
+                </div>
+                
+                <div class="question">
+                    <h3>3. 您的预算大概是多少？</h3>
+                    <input type="range" class="range-input" id="budgetRange" min="100" max="1000" value="300" step="50">
+                    <div class="range-display" id="budgetDisplay">¥300</div>
+                </div>
+                
+                <div class="question">
+                    <h3>4. 您希望点什么类型的菜？（多选）</h3>
+                    <div class="options">
+                        <div class="option" data-question="category" data-value="荤菜">荤菜</div>
+                        <div class="option" data-question="category" data-value="素菜">素菜</div>
+                        <div class="option" data-question="category" data-value="汤类">汤类</div>
+                    </div>
+                </div>
+                
+                <div class="question">
+                    <h3>5. 您大概需要几个菜？</h3>
+                    <input type="range" class="range-input" id="dishCountRange" min="3" max="15" value="6" step="1">
+                    <div class="range-display" id="dishCountDisplay">6个菜</div>
+                </div>
+                
+                <div class="question">
+                    <h3>6. 有什么特殊需求吗？</h3>
+                    <input type="text" class="text-input" id="specialRequests" placeholder="例如：少油少盐、多加辣椒、适合老人小孩等">
+                </div>
+                
+                <button class="recommend-btn" onclick="generateRecommendation()">🍽️ 生成推荐菜单</button>
+            </div>
+            
+            <div class="results" id="results">
+                <h2>为您推荐的菜单</h2>
+                <div id="recommendedMenu"></div>
+                <div class="total-section">
+                    <h3>预计总价</h3>
+                    <div class="total-price" id="totalPrice">¥0</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const menuData = {
+            荤菜: [
+                {name: "红烧肉", price: 38, tags: ["猪肉", "香甜", "咸鲜"]},
+                {name: "白切肉", price: 30, tags: ["猪肉", "清淡"]},
+                {name: "鸡煲", price: 35, tags: ["鸡肉", "香甜", "咸鲜"]},
+                {name: "排骨芋艿", price: 40, tags: ["猪肉", "咸鲜"]},
+                {name: "淡水鱼", price: 45, tags: ["鱼", "清淡", "咸鲜"]},
+                {name: "烤土豆", price: 20, tags: ["清淡", "香甜"]},
+                {name: "干菜鞭笋", price: 28, tags: ["清淡", "咸鲜"]},
+                {name: "笋干焖肉", price: 36, tags: ["猪肉", "咸鲜"]},
+                {name: "红烧溪沟鱼", price: 50, tags: ["鱼", "咸鲜"]},
+                {name: "烧椒牛肋条", price: 55, tags: ["牛肉", "麻辣"]},
+                {name: "炖猪蹄", price: 48, tags: ["猪肉", "咸鲜"]},
+                {name: "宫保鸡丁", price: 40, tags: ["鸡肉", "麻辣", "酸辣"]},
+                {name: "香辣小龙虾", price: 65, tags: ["海鲜", "麻辣"]},
+                {name: "农家腊肉", price: 52, tags: ["猪肉", "咸鲜"]},
+                {name: "土鸡炖蘑菇", price: 42, tags: ["鸡肉", "清淡"]},
+                {name: "干煸四季豆", price: 28, tags: ["麻辣"]},
+                {name: "椒盐排骨", price: 42, tags: ["猪肉", "咸鲜"]},
+                {name: "酱爆茄子", price: 26, tags: ["咸鲜"]},
+                {name: "回锅肉", price: 38, tags: ["猪肉", "麻辣"]},
+                {name: "锅包肉", price: 45, tags: ["猪肉", "酸辣"]},
+                {name: "宫保鸡翅", price: 40, tags: ["鸡肉", "麻辣"]},
+                {name: "香辣鸡脖", price: 32, tags: ["鸡肉", "麻辣"]},
+                {name: "蒜蓉烤大虾", price: 60, tags: ["海鲜", "咸鲜"]},
+                {name: "金针菇肥牛卷", price: 50, tags: ["牛肉", "清淡"]},
+                {name: "铁板牛排", price: 70, tags: ["牛肉", "咸鲜"]},
+                {name: "土豆炖牛肉", price: 48, tags: ["牛肉", "咸鲜"]},
+                {name: "豆瓣酱蒸鱼", price: 55, tags: ["鱼", "麻辣"]},
+                {name: "干锅花菜", price: 30, tags: ["麻辣"]}
+            ],
+            素菜: [
+                {name: "青菜炒蛋", price: 18, tags: ["清淡"]},
+                {name: "醋溜大白菜", price: 16, tags: ["酸辣"]},
+                {name: "炒本鸡蛋", price: 20, tags: ["清淡"]},
+                {name: "蒸蛋", price: 15, tags: ["清淡"]},
+                {name: "干菜鞭笋", price: 22, tags: ["清淡", "咸鲜"]},
+                {name: "烤番薯", price: 12, tags: ["香甜"]},
+                {name: "香炒时蔬", price: 18, tags: ["清淡"]},
+                {name: "清炒莴苣", price: 20, tags: ["清淡"]},
+                {name: "凉拌黄瓜", price: 15, tags: ["清淡", "酸辣"]},
+                {name: "酸辣土豆丝", price: 18, tags: ["酸辣"]},
+                {name: "麻辣香锅素菜拼盘", price: 25, tags: ["麻辣"]},
+                {name: "五香小炒", price: 22, tags: ["咸鲜"]}
+            ],
+            汤类: [
+                {name: "干菜汤", price: 28, tags: ["清淡"]},
+                {name: "三鲜汤", price: 32, tags: ["清淡", "咸鲜"]},
+                {name: "野山笋汤", price: 30, tags: ["清淡"]},
+                {name: "排骨芋艿汤", price: 38, tags: ["猪肉", "清淡"]},
+                {name: "酸菜白肉汤", price: 32, tags: ["猪肉", "酸辣"]},
+                {name: "花菇鸡汤", price: 35, tags: ["鸡肉", "清淡"]},
+                {name: "香菇牛骨汤", price: 40, tags: ["牛肉", "清淡"]},
+                {name: "野生蘑菇汤", price: 35, tags: ["清淡"]}
+            ]
+        };
+
+        let userPreferences = {
+            allergies: [],
+            taste: '',
+            budget: 300,
+            category: [],
+            dishCount: 6,
+            specialRequests: ''
+        };
+
+        document.querySelectorAll('.option').forEach(option => {
+            option.addEventListener('click', function() {
+                const question = this.dataset.question;
+                const value = this.dataset.value;
+                
+                if (question === 'allergies' || question === 'category') {
+                    this.classList.toggle('selected');
+                    if (this.classList.contains('selected')) {
+                        if (!userPreferences[question].includes(value)) {
+                            userPreferences[question].push(value);
+                        }
+                    } else {
+                        const index = userPreferences[question].indexOf(value);
+                        if (index > -1) {
+                            userPreferences[question].splice(index, 1);
+                        }
+                    }
+                } else {
+                    document.querySelectorAll(`[data-question="${question}"]`).forEach(opt => {
+                        opt.classList.remove('selected');
+                    });
+                    this.classList.add('selected');
+                    userPreferences[question] = value;
+                }
+            });
+        });
+
+        document.getElementById('budgetRange').addEventListener('input', function() {
+            userPreferences.budget = parseInt(this.value);
+            document.getElementById('budgetDisplay').textContent = '¥' + this.value;
+        });
+
+        document.getElementById('dishCountRange').addEventListener('input', function() {
+            userPreferences.dishCount = parseInt(this.value);
+            document.getElementById('dishCountDisplay').textContent = this.value + '个菜';
+        });
+
+        document.getElementById('specialRequests').addEventListener('input', function() {
+            userPreferences.specialRequests = this.value;
+        });
+
+        function generateRecommendation() {
+            const recommendations = {
+                荤菜: [],
+                素菜: [],
+                汤类: []
+            };
+
+            let totalPrice = 0;
+            let totalDishes = 0;
+
+            userPreferences.category.forEach(category => {
+                let categoryKey = category;
+                if (category === '荤菜') categoryKey = '荤菜';
+                
+                if (menuData[categoryKey]) {
+                    let availableDishes = menuData[categoryKey].filter(dish => {
+                        if (userPreferences.allergies.includes('素食') && categoryKey === '荤菜') return false;
+                        if (userPreferences.allergies.includes('不吃猪肉') && dish.tags.includes('猪肉')) return false;
+                        if (userPreferences.allergies.includes('不吃牛肉') && dish.tags.includes('牛肉')) return false;
+                        if (userPreferences.allergies.includes('不吃鸡肉') && dish.tags.includes('鸡肉')) return false;
+                        if (userPreferences.allergies.includes('不吃鱼') && dish.tags.includes('鱼')) return false;
+                        if (userPreferences.allergies.includes('海鲜过敏') && dish.tags.includes('海鲜')) return false;
+                        
+                        if (userPreferences.taste && !dish.tags.includes(userPreferences.taste) && userPreferences.taste !== '清淡') {
+                            return false;
+                        }
+                        
+                        return dish.price <= userPreferences.budget / userPreferences.dishCount * 1.2;
+                    });
+
+                    if (userPreferences.taste) {
+                        availableDishes.sort((a, b) => {
+                            const aMatch = a.tags.includes(userPreferences.taste) ? 1 : 0;
+                            const bMatch = b.tags.includes(userPreferences.taste) ? 1 : 0;
+                            return bMatch - aMatch;
+                        });
+                    }
+
+                    const dishesToSelect = Math.min(
+                        Math.ceil(userPreferences.dishCount / userPreferences.category.length),
+                        availableDishes.length
+                    );
+
+                    for (let i = 0; i < dishesToSelect && totalDishes < userPreferences.dishCount && totalPrice + availableDishes[i].price <= userPreferences.budget; i++) {
+                        recommendations[categoryKey].push(availableDishes[i]);
+                        totalPrice += availableDishes[i].price;
+                        totalDishes++;
+                    }
+                }
+            });
+
+            displayRecommendations(recommendations, totalPrice);
+        }
+
+        function displayRecommendations(recommendations, totalPrice) {
+            const resultsDiv = document.getElementById('results');
+            const menuDiv = document.getElementById('recommendedMenu');
+            const totalPriceDiv = document.getElementById('totalPrice');
+
+            menuDiv.innerHTML = '';
+
+            Object.keys(recommendations).forEach(category => {
+                if (recommendations[category].length > 0) {
+                    const categoryDiv = document.createElement('div');
+                    categoryDiv.className = 'menu-category';
+
+                    const categoryTitle = document.createElement('div');
+                    categoryTitle.className = 'category-title';
+                    categoryTitle.textContent = category;
+                    categoryDiv.appendChild(categoryTitle);
+
+                    recommendations[category].forEach(dish => {
+                        const dishDiv = document.createElement('div');
+                        dishDiv.className = 'dish-item';
+
+                        const dishName = document.createElement('div');
+                        dishName.className = 'dish-name';
+                        dishName.textContent = dish.name;
+
+                        const dishPrice = document.createElement('div');
+                        dishPrice.className = 'dish-price';
+                        dishPrice.textContent = '¥' + dish.price;
+
+                        dishDiv.appendChild(dishName);
+                        dishDiv.appendChild(dishPrice);
+                        categoryDiv.appendChild(dishDiv);
+                    });
+
+                    menuDiv.appendChild(categoryDiv);
+                }
+            });
+
+            totalPriceDiv.textContent = '¥' + totalPrice;
+            resultsDiv.style.display = 'block';
+            resultsDiv.scrollIntoView({ behavior: 'smooth' });
+        }
+    </script>
+</body>
+</html>
